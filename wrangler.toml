@@ -1,6 +1,10 @@
 name = "product-ltv-app"
+main = "worker/index.js"
 compatibility_date = "2024-09-23"
-pages_build_output_dir = "client/dist"
+
+[assets]
+directory = "client/dist"
+binding = "ASSETS"
 
 [[d1_databases]]
 binding = "DB"

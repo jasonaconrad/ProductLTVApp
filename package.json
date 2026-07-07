@@ -9,7 +9,7 @@
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
     "build": "npm run build --prefix client",
-    "pages:dev": "npm run build --prefix client && wrangler pages dev client/dist --d1=DB=local-dev-id",
+    "worker:dev": "npm run build --prefix client && wrangler dev",
     "d1:local:init": "wrangler d1 execute product-ltv-db --local --file=d1/schema.sql && wrangler d1 execute product-ltv-db --local --file=d1/seed.sql"
   },
   "devDependencies": {
