@@ -9,4 +9,4 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "product-ltv-db"
-database_id = "local-dev-id"
+database_id = "60aa8281-7209-4857-bb24-979e33294b7b"
