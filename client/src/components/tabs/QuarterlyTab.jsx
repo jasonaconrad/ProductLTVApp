@@ -1,4 +1,5 @@
 import { formatCurrencyFull } from '../../format.js';
+import { FISCAL_YEARS } from '../../constants.js';
 
 function QuarterRow({ period, data, onChange }) {
   const target = Number(data.target_rev) || 0;
@@ -45,27 +46,21 @@ function QuarterRow({ period, data, onChange }) {
 }
 
 export default function QuarterlyTab({ actuals, onChange }) {
-  const fy26 = ['FY26-Q1', 'FY26-Q2', 'FY26-Q3', 'FY26-Q4'];
-  const fy27 = ['FY27-Q1', 'FY27-Q2', 'FY27-Q3', 'FY27-Q4'];
-
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <div className="mb-2 text-label12 font-semibold uppercase tracking-wide text-gray-500">FY26</div>
-        <div className="grid grid-cols-4 gap-2">
-          {fy26.map((period) => (
-            <QuarterRow key={period} period={period} data={actuals[period] || {}} onChange={onChange} />
-          ))}
-        </div>
-      </div>
-      <div>
-        <div className="mb-2 text-label12 font-semibold uppercase tracking-wide text-gray-500">FY27</div>
-        <div className="grid grid-cols-4 gap-2">
-          {fy27.map((period) => (
-            <QuarterRow key={period} period={period} data={actuals[period] || {}} onChange={onChange} />
-          ))}
-        </div>
-      </div>
+      {FISCAL_YEARS.map((fy) => {
+        const periods = ['Q1', 'Q2', 'Q3', 'Q4'].map((q) => `${fy}-${q}`);
+        return (
+          <div key={fy}>
+            <div className="mb-2 text-label12 font-semibold uppercase tracking-wide text-gray-500">{fy}</div>
+            <div className="grid grid-cols-4 gap-2">
+              {periods.map((period) => (
+                <QuarterRow key={period} period={period} data={actuals[period] || {}} onChange={onChange} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

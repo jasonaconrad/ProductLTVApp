@@ -3,7 +3,11 @@ import { PlatformPill, FyPill, MetricPill, ConfidenceBadge, ProgressBar } from '
 import { formatCurrency } from '../format.js';
 
 function InitiativeCard({ initiative, flagged, onSelect }) {
-  const target = initiative.fy === 'FY27' ? initiative.fy27_target : initiative.fy26_target;
+  const target = initiative.fy === 'FY28'
+    ? initiative.fy28_target
+    : initiative.fy === 'FY27'
+      ? initiative.fy27_target
+      : initiative.fy26_target;
 
   return (
     <button

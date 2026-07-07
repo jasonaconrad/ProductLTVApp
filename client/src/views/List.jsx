@@ -9,6 +9,7 @@ const COLUMNS = [
   { key: 'status', label: 'Status' },
   { key: 'fy26_target', label: 'FY26 Target' },
   { key: 'fy27_target', label: 'FY27 Target' },
+  { key: 'fy28_target', label: 'FY28 Target' },
   { key: 'progress', label: 'Progress' },
   { key: 'confidence_score', label: 'Confidence' },
   { key: 'target_launch', label: 'Launch Target' },
@@ -78,6 +79,7 @@ export default function ListView({ initiatives, flaggedIds, onSelect }) {
               <td className="px-3 py-2"><StatusPill status={i.status} /></td>
               <td className="px-3 py-2 text-gray-700">{formatCurrency(i.fy26_target)}</td>
               <td className="px-3 py-2 text-gray-700">{formatCurrency(i.fy27_target)}</td>
+              <td className="px-3 py-2 text-gray-700">{formatCurrency(i.fy28_target)}</td>
               <td className="px-3 py-2 text-gray-700">
                 {i.target_progress > 0 ? `${formatPercent(i.actual_progress)} / ${formatPercent(i.target_progress)}` : '—'}
               </td>

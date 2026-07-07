@@ -23,13 +23,15 @@ function buildActualsDraft(actuals) {
   return map;
 }
 
-export default function InitiativeModal({ initiativeId, onClose, onSaved }) {
+export default function InitiativeModal({ initiativeId, onClose, onSaved, onCloned, onDeleted }) {
   const [activeTab, setActiveTab] = useState('details');
   const [draft, setDraft] = useState(null);
   const [actualsDraft, setActualsDraft] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [cloning, setCloning] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [updatedBy, setUpdatedBy] = useState(() => localStorage.getItem('pipeline_updated_by') || '');
 
   const load = useCallback(async () => {
@@ -78,6 +80,7 @@ export default function InitiativeModal({ initiativeId, onClose, onSaved }) {
         owner: draft.owner,
         fy26_target: draft.fy26_target,
         fy27_target: draft.fy27_target,
+        fy28_target: draft.fy28_target,
         pepm: draft.pepm,
         progress_metric: draft.progress_metric,
         notes: draft.notes,
@@ -117,6 +120,32 @@ export default function InitiativeModal({ initiativeId, onClose, onSaved }) {
     }
   };
 
+  const handleClone = async () => {
+    setCloning(true);
+    setError(null);
+    try {
+      const clone = await api.cloneInitiative(initiativeId);
+      onCloned(clone.id);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setCloning(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete "${draft.name}"? This cannot be undone.`)) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await api.deleteInitiative(initiativeId);
+      onDeleted();
+    } catch (e) {
+      setError(e.message);
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
@@ -128,9 +157,31 @@ export default function InitiativeModal({ initiativeId, onClose, onSaved }) {
             <h2 className="text-base font-semibold text-gray-900">{draft?.name || 'Initiative'}</h2>
             {draft && <p className="text-label12 text-gray-500">{draft.platform} · {draft.fy} · {draft.segment || 'No segment'}</p>}
           </div>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700" aria-label="Close">
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            {draft && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleClone}
+                  disabled={cloning}
+                  className="text-label12 font-medium text-navy hover:underline disabled:opacity-50"
+                >
+                  {cloning ? 'Cloning…' : 'Clone'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="text-label12 font-medium text-red-500 hover:underline disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting…' : 'Delete'}
+                </button>
+              </>
+            )}
+            <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700" aria-label="Close">
+              ✕
+            </button>
+          </div>
         </div>
 
         {loading && <div className="flex-1 p-8 text-center text-gray-400">Loading…</div>}

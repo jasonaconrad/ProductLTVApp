@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api.js';
+import { FISCAL_YEARS } from '../constants.js';
 
 const EMPTY = {
   name: '',
@@ -11,6 +12,7 @@ const EMPTY = {
   owner: '',
   fy26_target: 0,
   fy27_target: 0,
+  fy28_target: 0,
   pepm: 0,
   progress_metric: 'enablement',
   notes: '',
@@ -94,8 +96,9 @@ export default function AddInitiativeModal({ onClose, onCreated }) {
                 onChange={(e) => update({ fy: e.target.value })}
                 className="rounded border border-gray-300 px-2 py-1.5 text-base13 focus:border-navy focus:outline-none"
               >
-                <option value="FY26">FY26</option>
-                <option value="FY27">FY27</option>
+                {FISCAL_YEARS.map((fy) => (
+                  <option key={fy} value={fy}>{fy}</option>
+                ))}
               </select>
             </label>
 
@@ -135,6 +138,16 @@ export default function AddInitiativeModal({ onClose, onCreated }) {
                 type="number"
                 value={form.fy27_target}
                 onChange={(e) => update({ fy27_target: Number(e.target.value) })}
+                className="rounded border border-gray-300 px-2 py-1.5 text-base13 focus:border-navy focus:outline-none"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-label12 font-medium text-gray-500">FY28 target ($)</span>
+              <input
+                type="number"
+                value={form.fy28_target}
+                onChange={(e) => update({ fy28_target: Number(e.target.value) })}
                 className="rounded border border-gray-300 px-2 py-1.5 text-base13 focus:border-navy focus:outline-none"
               />
             </label>

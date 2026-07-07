@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { QUARTERS } from '../constants.js';
+import { QUARTERS, FISCAL_YEARS } from '../constants.js';
 import { formatCurrency, formatCurrencyFull } from '../format.js';
 import { api } from '../api.js';
 
@@ -26,22 +26,27 @@ export default function Forecast({ initiatives }) {
   const [loadingQuarters, setLoadingQuarters] = useState(true);
 
   const summary = useMemo(() => {
-    const result = { FY26: { target: 0, weighted: 0 }, FY27: { target: 0, weighted: 0 } };
+    const result = Object.fromEntries(FISCAL_YEARS.map((fy) => [fy, { target: 0, weighted: 0 }]));
     for (const i of initiatives) {
       const weight = (i.confidence_score || 0) / 100;
-      result.FY26.target += i.fy26_target || 0;
-      result.FY26.weighted += (i.fy26_target || 0) * weight;
-      result.FY27.target += i.fy27_target || 0;
-      result.FY27.weighted += (i.fy27_target || 0) * weight;
+      for (const fy of FISCAL_YEARS) {
+        const target = i[`${fy.toLowerCase()}_target`] || 0;
+        result[fy].target += target;
+        result[fy].weighted += target * weight;
+      }
     }
     return result;
   }, [initiatives]);
 
   const platformTotals = useMemo(() => {
-    const byPlatform = { Flex: { platform: 'Flex', FY26: 0, FY27: 0 }, Paycor: { platform: 'Paycor', FY26: 0, FY27: 0 }, Both: { platform: 'Both', FY26: 0, FY27: 0 } };
+    const platforms = ['Flex', 'Paycor', 'Both'];
+    const byPlatform = Object.fromEntries(
+      platforms.map((p) => [p, { platform: p, ...Object.fromEntries(FISCAL_YEARS.map((fy) => [fy, 0])) }])
+    );
     for (const i of initiatives) {
-      byPlatform[i.platform].FY26 += i.fy26_target || 0;
-      byPlatform[i.platform].FY27 += i.fy27_target || 0;
+      for (const fy of FISCAL_YEARS) {
+        byPlatform[i.platform][fy] += i[`${fy.toLowerCase()}_target`] || 0;
+      }
     }
     return Object.values(byPlatform);
   }, [initiatives]);
@@ -75,8 +80,9 @@ export default function Forecast({ initiatives }) {
   return (
     <div className="flex flex-col gap-5 p-4">
       <div className="flex gap-4">
-        <SummaryCard fy="FY26" target={summary.FY26.target} weighted={summary.FY26.weighted} />
-        <SummaryCard fy="FY27" target={summary.FY27.target} weighted={summary.FY27.weighted} />
+        {FISCAL_YEARS.map((fy) => (
+          <SummaryCard key={fy} fy={fy} target={summary[fy].target} weighted={summary[fy].weighted} />
+        ))}
       </div>
 
       <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
@@ -84,7 +90,7 @@ export default function Forecast({ initiatives }) {
         {loadingQuarters ? (
           <div className="py-6 text-center text-gray-400">Loading quarterly totals…</div>
         ) : (
-          <div className="grid grid-cols-8 gap-2">
+          <div className="grid grid-cols-6 gap-2">
             {QUARTERS.map((q) => {
               const t = quarterTotals[q] || { target: 0, actual: 0 };
               const pct = t.target > 0 ? Math.min(100, Math.round((t.actual / t.target) * 100)) : 0;
@@ -114,6 +120,7 @@ export default function Forecast({ initiatives }) {
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar dataKey="FY26" fill="#1B3A5C" radius={[3, 3, 0, 0]} />
             <Bar dataKey="FY27" fill="#5B9BD5" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="FY28" fill="#14B8A6" radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

@@ -1,8 +1,11 @@
 export const STATUSES = ['Consideration', 'In Progress', 'Launched', 'At Scale', 'Completed'];
 
+export const FISCAL_YEARS = ['FY26', 'FY27', 'FY28'];
+
 export const QUARTERS = [
   'FY26-Q1', 'FY26-Q2', 'FY26-Q3', 'FY26-Q4',
   'FY27-Q1', 'FY27-Q2', 'FY27-Q3', 'FY27-Q4',
+  'FY28-Q1', 'FY28-Q2', 'FY28-Q3', 'FY28-Q4',
 ];
 
 export const PLATFORM_STYLES = {

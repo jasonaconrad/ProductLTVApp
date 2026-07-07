@@ -19,11 +19,12 @@ CREATE TABLE IF NOT EXISTS initiatives (
   segment TEXT,
   status TEXT NOT NULL DEFAULT 'Consideration'
     CHECK(status IN ('Consideration','In Progress','Launched','At Scale','Completed')),
-  fy TEXT NOT NULL CHECK(fy IN ('FY26','FY27')),
+  fy TEXT NOT NULL CHECK(fy IN ('FY26','FY27','FY28')),
   rev_type TEXT,
   owner TEXT,
   fy26_target INTEGER DEFAULT 0,
   fy27_target INTEGER DEFAULT 0,
+  fy28_target INTEGER DEFAULT 0,
   pepm REAL DEFAULT 0,
   progress_metric TEXT NOT NULL DEFAULT 'enablement'
     CHECK(progress_metric IN ('attach','enablement')),
@@ -73,6 +74,7 @@ CREATE TABLE IF NOT EXISTS snapshots (
   owner TEXT,
   fy26_target INTEGER,
   fy27_target INTEGER,
+  fy28_target INTEGER,
   pepm REAL,
   progress_metric TEXT,
   notes TEXT,
@@ -85,6 +87,56 @@ CREATE TABLE IF NOT EXISTS snapshots (
   confidence_score REAL
 );
 `);
+
+function migrateSchema() {
+  const initiativeColumns = db.prepare("PRAGMA table_info(initiatives)").all();
+  const needsFy28 = !initiativeColumns.some((c) => c.name === 'fy28_target');
+
+  if (needsFy28) {
+    db.pragma('foreign_keys = OFF');
+    const migrateInitiatives = db.transaction(() => {
+      db.exec(`
+        CREATE TABLE initiatives_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          platform TEXT NOT NULL CHECK(platform IN ('Flex','Paycor','Both')),
+          segment TEXT,
+          status TEXT NOT NULL DEFAULT 'Consideration'
+            CHECK(status IN ('Consideration','In Progress','Launched','At Scale','Completed')),
+          fy TEXT NOT NULL CHECK(fy IN ('FY26','FY27','FY28')),
+          rev_type TEXT,
+          owner TEXT,
+          fy26_target INTEGER DEFAULT 0,
+          fy27_target INTEGER DEFAULT 0,
+          fy28_target INTEGER DEFAULT 0,
+          pepm REAL DEFAULT 0,
+          progress_metric TEXT NOT NULL DEFAULT 'enablement'
+            CHECK(progress_metric IN ('attach','enablement')),
+          notes TEXT,
+          created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now'))
+        );
+      `);
+      db.exec(`
+        INSERT INTO initiatives_new
+          (id, name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes, created_at, updated_at)
+        SELECT id, name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, 0, pepm, progress_metric, notes, created_at, updated_at
+        FROM initiatives;
+      `);
+      db.exec('DROP TABLE initiatives;');
+      db.exec('ALTER TABLE initiatives_new RENAME TO initiatives;');
+    });
+    migrateInitiatives();
+    db.pragma('foreign_keys = ON');
+    console.log('Migrated initiatives table: added fy28_target, widened fy to include FY28.');
+  }
+
+  const snapshotColumns = db.prepare("PRAGMA table_info(snapshots)").all();
+  if (!snapshotColumns.some((c) => c.name === 'fy28_target')) {
+    db.exec('ALTER TABLE snapshots ADD COLUMN fy28_target INTEGER;');
+    console.log('Migrated snapshots table: added fy28_target.');
+  }
+}
 
 function seedIfEmpty() {
   const { count } = db.prepare('SELECT COUNT(*) AS count FROM initiatives').get();
@@ -154,4 +206,5 @@ function seedIfEmpty() {
   console.log(`Seeded ${SEED_INITIATIVES.length} initiatives and ${SEED_ACTUALS.length} actuals rows.`);
 }
 
+migrateSchema();
 seedIfEmpty();

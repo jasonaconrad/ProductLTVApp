@@ -1,4 +1,4 @@
-import { STATUSES } from '../constants.js';
+import { STATUSES, FISCAL_YEARS } from '../constants.js';
 
 export default function FilterBar({ filters, onChange }) {
   const update = (field, value) => onChange({ ...filters, [field]: value });
@@ -41,8 +41,9 @@ export default function FilterBar({ filters, onChange }) {
         className="rounded border border-gray-300 px-2 py-1 text-base13 focus:border-navy focus:outline-none"
       >
         <option value="">All fiscal years</option>
-        <option value="FY26">FY26</option>
-        <option value="FY27">FY27</option>
+        {FISCAL_YEARS.map((fy) => (
+          <option key={fy} value={fy}>{fy}</option>
+        ))}
       </select>
 
       {(filters.search || filters.platform || filters.status || filters.fy) && (

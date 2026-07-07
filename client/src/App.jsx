@@ -91,6 +91,14 @@ export default function App() {
           initiativeId={selectedId}
           onClose={() => setSelectedId(null)}
           onSaved={refresh}
+          onCloned={(newId) => {
+            refresh();
+            setSelectedId(newId);
+          }}
+          onDeleted={() => {
+            setSelectedId(null);
+            refresh();
+          }}
         />
       )}
 

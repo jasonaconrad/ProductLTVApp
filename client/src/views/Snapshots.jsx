@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { formatCurrencyFull } from '../format.js';
 
-const HIGHLIGHT_FIELDS = new Set(['fy26_target', 'fy27_target', 'confidence_score']);
+const HIGHLIGHT_FIELDS = new Set(['fy26_target', 'fy27_target', 'fy28_target', 'confidence_score']);
+const REVENUE_FIELDS = new Set(['fy26_target', 'fy27_target', 'fy28_target']);
 
 function formatFieldValue(field, value) {
   if (value === null || value === undefined || value === '') return '—';
-  if (field === 'fy26_target' || field === 'fy27_target') return formatCurrencyFull(value);
+  if (REVENUE_FIELDS.has(field)) return formatCurrencyFull(value);
   if (field === 'confidence_score') return `${value}%`;
   return String(value);
 }
@@ -204,6 +205,28 @@ export default function Snapshots() {
 
           {compareResult && (
             <div className="flex flex-col gap-4">
+              {compareResult.revenue_summary && (
+                <div className="flex gap-4">
+                  <div className="flex-1 rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="text-label12 font-semibold uppercase tracking-wide text-gray-500">Baseline Revenue Impact</div>
+                    <div className="mt-1 text-2xl font-bold text-gray-900">
+                      {formatCurrencyFull(compareResult.revenue_summary.baseline_total)}
+                    </div>
+                    <div className="text-label12 text-gray-400">Total portfolio target as of {compareResult.snapshotA.label}</div>
+                  </div>
+                  <div className="flex-1 rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="text-label12 font-semibold uppercase tracking-wide text-gray-500">Incremental Revenue Impact</div>
+                    <div className={`mt-1 text-2xl font-bold ${
+                      compareResult.revenue_summary.incremental_impact >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {compareResult.revenue_summary.incremental_impact >= 0 ? '+' : ''}
+                      {formatCurrencyFull(compareResult.revenue_summary.incremental_impact)}
+                    </div>
+                    <div className="text-label12 text-gray-400">Net change vs {compareResult.snapshotB.label}</div>
+                  </div>
+                </div>
+              )}
+
               <div className="rounded-md border border-green-200 bg-green-50 p-3">
                 <div className="mb-2 text-label12 font-semibold uppercase tracking-wide text-green-700">
                   New initiatives ({compareResult.new_initiatives.length})

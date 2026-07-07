@@ -26,7 +26,7 @@ router.get('/', (req, res) => {
   const flags = [];
 
   for (const row of rows) {
-    const revenueTarget = (row.fy26_target || 0) + (row.fy27_target || 0);
+    const revenueTarget = (row.fy26_target || 0) + (row.fy27_target || 0) + (row.fy28_target || 0);
     const launchPassed = !!row.target_launch && monthDiff(row.target_launch, today) >= 0;
 
     if (row.status === 'In Progress' && !row.forecast_launch) {

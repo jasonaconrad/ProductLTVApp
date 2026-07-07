@@ -4,7 +4,7 @@ import { computeConfidence } from '../confidence.js';
 
 const router = Router();
 
-const INITIATIVE_FIELDS = ['name', 'platform', 'segment', 'status', 'fy', 'rev_type', 'owner', 'fy26_target', 'fy27_target', 'pepm', 'progress_metric', 'notes'];
+const INITIATIVE_FIELDS = ['name', 'platform', 'segment', 'status', 'fy', 'rev_type', 'owner', 'fy26_target', 'fy27_target', 'fy28_target', 'pepm', 'progress_metric', 'notes'];
 const PIPELINE_FIELDS = ['target_launch', 'forecast_launch', 'target_progress', 'actual_progress', 'ramp_pct'];
 
 function getJoined(id) {
@@ -43,8 +43,8 @@ router.post('/', (req, res) => {
 
   const insertTxn = db.transaction(() => {
     const result = db.prepare(`
-      INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, pepm, progress_metric, notes)
-      VALUES (@name, @platform, @segment, @status, @fy, @rev_type, @owner, @fy26_target, @fy27_target, @pepm, @progress_metric, @notes)
+      INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes)
+      VALUES (@name, @platform, @segment, @status, @fy, @rev_type, @owner, @fy26_target, @fy27_target, @fy28_target, @pepm, @progress_metric, @notes)
     `).run({
       name: body.name,
       platform: body.platform,
@@ -55,6 +55,7 @@ router.post('/', (req, res) => {
       owner: body.owner || null,
       fy26_target: body.fy26_target || 0,
       fy27_target: body.fy27_target || 0,
+      fy28_target: body.fy28_target || 0,
       pepm: body.pepm || 0,
       progress_metric: body.progress_metric || 'enablement',
       notes: body.notes || null,
@@ -82,6 +83,65 @@ router.post('/', (req, res) => {
   res.status(201).json(getJoined(id));
 });
 
+router.post('/:id/clone', (req, res) => {
+  const source = db.prepare('SELECT * FROM initiatives WHERE id = ?').get(req.params.id);
+  if (!source) return res.status(404).json({ error: 'Initiative not found' });
+
+  const cloneTxn = db.transaction(() => {
+    const result = db.prepare(`
+      INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes)
+      VALUES (@name, @platform, @segment, 'Consideration', @fy, @rev_type, @owner, @fy26_target, @fy27_target, @fy28_target, @pepm, @progress_metric, @notes)
+    `).run({
+      name: `${source.name} (Copy)`,
+      platform: source.platform,
+      segment: source.segment,
+      fy: source.fy,
+      rev_type: source.rev_type,
+      owner: source.owner,
+      fy26_target: source.fy26_target,
+      fy27_target: source.fy27_target,
+      fy28_target: source.fy28_target,
+      pepm: source.pepm,
+      progress_metric: source.progress_metric,
+      notes: source.notes,
+    });
+
+    const id = result.lastInsertRowid;
+    const { score } = computeConfidence({
+      status: 'Consideration',
+      targetLaunch: null,
+      forecastLaunch: null,
+      targetProgress: 0,
+      actualProgress: 0,
+      rampPct: 0,
+    });
+
+    db.prepare(`
+      INSERT INTO pipeline_fields (initiative_id, confidence_score, updated_by)
+      VALUES (?, ?, ?)
+    `).run(id, score, null);
+
+    return id;
+  });
+
+  const id = cloneTxn();
+  res.status(201).json(getJoined(id));
+});
+
+router.delete('/:id', (req, res) => {
+  const existing = db.prepare('SELECT id FROM initiatives WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Initiative not found' });
+
+  const deleteTxn = db.transaction(() => {
+    db.prepare('DELETE FROM actuals_log WHERE initiative_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM pipeline_fields WHERE initiative_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM initiatives WHERE id = ?').run(req.params.id);
+  });
+  deleteTxn();
+
+  res.status(204).end();
+});
+
 router.put('/:id', (req, res) => {
   const existing = db.prepare('SELECT * FROM initiatives WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Initiative not found' });
@@ -93,7 +153,8 @@ router.put('/:id', (req, res) => {
     UPDATE initiatives SET
       name = @name, platform = @platform, segment = @segment, status = @status, fy = @fy,
       rev_type = @rev_type, owner = @owner, fy26_target = @fy26_target, fy27_target = @fy27_target,
-      pepm = @pepm, progress_metric = @progress_metric, notes = @notes, updated_at = datetime('now')
+      fy28_target = @fy28_target, pepm = @pepm, progress_metric = @progress_metric, notes = @notes,
+      updated_at = datetime('now')
     WHERE id = @id
   `).run({ ...merged, id: req.params.id });
 
