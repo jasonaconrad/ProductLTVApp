@@ -8,9 +8,12 @@
     "dev": "concurrently -n server,client -c blue,green \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
-    "build": "npm run build --prefix client"
+    "build": "npm run build --prefix client",
+    "pages:dev": "npm run build --prefix client && wrangler pages dev client/dist --d1=DB=local-dev-id",
+    "d1:local:init": "wrangler d1 execute product-ltv-db --local --file=d1/schema.sql && wrangler d1 execute product-ltv-db --local --file=d1/seed.sql"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "wrangler": "^4.107.0"
   }
 }
