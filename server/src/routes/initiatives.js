@@ -4,7 +4,7 @@ import { computeConfidence } from '../confidence.js';
 
 const router = Router();
 
-const INITIATIVE_FIELDS = ['name', 'platform', 'segment', 'status', 'fy', 'rev_type', 'owner', 'fy26_target', 'fy27_target', 'fy28_target', 'pepm', 'progress_metric', 'notes'];
+const INITIATIVE_FIELDS = ['name', 'platform', 'segment', 'status', 'fy', 'rev_type', 'owner', 'fy26_target', 'fy27_target', 'fy28_target', 'pepm', 'progress_metric', 'notes', 'corporate_blue_chip', 'product_initiative', 'commercialization_owner', 'product_ops_owner'];
 const PIPELINE_FIELDS = ['target_launch', 'forecast_launch', 'target_progress', 'actual_progress', 'ramp_pct'];
 
 function getJoined(id) {
@@ -43,8 +43,8 @@ router.post('/', (req, res) => {
 
   const insertTxn = db.transaction(() => {
     const result = db.prepare(`
-      INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes)
-      VALUES (@name, @platform, @segment, @status, @fy, @rev_type, @owner, @fy26_target, @fy27_target, @fy28_target, @pepm, @progress_metric, @notes)
+      INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes, corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner)
+      VALUES (@name, @platform, @segment, @status, @fy, @rev_type, @owner, @fy26_target, @fy27_target, @fy28_target, @pepm, @progress_metric, @notes, @corporate_blue_chip, @product_initiative, @commercialization_owner, @product_ops_owner)
     `).run({
       name: body.name,
       platform: body.platform,
@@ -59,6 +59,10 @@ router.post('/', (req, res) => {
       pepm: body.pepm || 0,
       progress_metric: body.progress_metric || 'enablement',
       notes: body.notes || null,
+      corporate_blue_chip: body.corporate_blue_chip || null,
+      product_initiative: body.product_initiative || null,
+      commercialization_owner: body.commercialization_owner || null,
+      product_ops_owner: body.product_ops_owner || null,
     });
 
     const id = result.lastInsertRowid;
@@ -89,8 +93,8 @@ router.post('/:id/clone', (req, res) => {
 
   const cloneTxn = db.transaction(() => {
     const result = db.prepare(`
-      INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes)
-      VALUES (@name, @platform, @segment, 'Consideration', @fy, @rev_type, @owner, @fy26_target, @fy27_target, @fy28_target, @pepm, @progress_metric, @notes)
+      INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes, corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner)
+      VALUES (@name, @platform, @segment, 'Consideration', @fy, @rev_type, @owner, @fy26_target, @fy27_target, @fy28_target, @pepm, @progress_metric, @notes, @corporate_blue_chip, @product_initiative, @commercialization_owner, @product_ops_owner)
     `).run({
       name: `${source.name} (Copy)`,
       platform: source.platform,
@@ -104,6 +108,10 @@ router.post('/:id/clone', (req, res) => {
       pepm: source.pepm,
       progress_metric: source.progress_metric,
       notes: source.notes,
+      corporate_blue_chip: source.corporate_blue_chip,
+      product_initiative: source.product_initiative,
+      commercialization_owner: source.commercialization_owner,
+      product_ops_owner: source.product_ops_owner,
     });
 
     const id = result.lastInsertRowid;
@@ -154,6 +162,8 @@ router.put('/:id', (req, res) => {
       name = @name, platform = @platform, segment = @segment, status = @status, fy = @fy,
       rev_type = @rev_type, owner = @owner, fy26_target = @fy26_target, fy27_target = @fy27_target,
       fy28_target = @fy28_target, pepm = @pepm, progress_metric = @progress_metric, notes = @notes,
+      corporate_blue_chip = @corporate_blue_chip, product_initiative = @product_initiative,
+      commercialization_owner = @commercialization_owner, product_ops_owner = @product_ops_owner,
       updated_at = datetime('now')
     WHERE id = @id
   `).run({ ...merged, id: req.params.id });

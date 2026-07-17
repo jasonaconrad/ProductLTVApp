@@ -29,6 +29,10 @@ CREATE TABLE IF NOT EXISTS initiatives (
   progress_metric TEXT NOT NULL DEFAULT 'enablement'
     CHECK(progress_metric IN ('attach','enablement')),
   notes TEXT,
+  corporate_blue_chip TEXT,
+  product_initiative TEXT,
+  commercialization_owner TEXT,
+  product_ops_owner TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -78,6 +82,10 @@ CREATE TABLE IF NOT EXISTS snapshots (
   pepm REAL,
   progress_metric TEXT,
   notes TEXT,
+  corporate_blue_chip TEXT,
+  product_initiative TEXT,
+  commercialization_owner TEXT,
+  product_ops_owner TEXT,
 
   target_launch TEXT,
   forecast_launch TEXT,
@@ -135,6 +143,24 @@ function migrateSchema() {
   if (!snapshotColumns.some((c) => c.name === 'fy28_target')) {
     db.exec('ALTER TABLE snapshots ADD COLUMN fy28_target INTEGER;');
     console.log('Migrated snapshots table: added fy28_target.');
+  }
+
+  const alignmentColumns = ['corporate_blue_chip', 'product_initiative', 'commercialization_owner', 'product_ops_owner'];
+
+  const currentInitiativeColumns = db.prepare("PRAGMA table_info(initiatives)").all().map((c) => c.name);
+  for (const col of alignmentColumns) {
+    if (!currentInitiativeColumns.includes(col)) {
+      db.exec(`ALTER TABLE initiatives ADD COLUMN ${col} TEXT;`);
+      console.log(`Migrated initiatives table: added ${col}.`);
+    }
+  }
+
+  const currentSnapshotColumns = db.prepare("PRAGMA table_info(snapshots)").all().map((c) => c.name);
+  for (const col of alignmentColumns) {
+    if (!currentSnapshotColumns.includes(col)) {
+      db.exec(`ALTER TABLE snapshots ADD COLUMN ${col} TEXT;`);
+      console.log(`Migrated snapshots table: added ${col}.`);
+    }
   }
 }
 

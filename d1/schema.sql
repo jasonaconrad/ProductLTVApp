@@ -15,6 +15,10 @@ CREATE TABLE IF NOT EXISTS initiatives (
   progress_metric TEXT NOT NULL DEFAULT 'enablement'
     CHECK(progress_metric IN ('attach','enablement')),
   notes TEXT,
+  corporate_blue_chip TEXT,
+  product_initiative TEXT,
+  commercialization_owner TEXT,
+  product_ops_owner TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -64,6 +68,10 @@ CREATE TABLE IF NOT EXISTS snapshots (
   pepm REAL,
   progress_metric TEXT,
   notes TEXT,
+  corporate_blue_chip TEXT,
+  product_initiative TEXT,
+  commercialization_owner TEXT,
+  product_ops_owner TEXT,
 
   target_launch TEXT,
   forecast_launch TEXT,

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { api } from '../api.js';
 import { QUARTERS } from '../constants.js';
 import DetailsTab from './tabs/DetailsTab.jsx';
+import AlignmentTab from './tabs/AlignmentTab.jsx';
 import ProgressTab from './tabs/ProgressTab.jsx';
 import RevenueTab from './tabs/RevenueTab.jsx';
 import QuarterlyTab from './tabs/QuarterlyTab.jsx';
@@ -9,6 +10,7 @@ import ConfidenceTab from './tabs/ConfidenceTab.jsx';
 
 const TABS = [
   { key: 'details', label: 'Details' },
+  { key: 'alignment', label: 'Alignment' },
   { key: 'progress', label: 'Progress Metric' },
   { key: 'revenue', label: 'Revenue Targets' },
   { key: 'quarterly', label: 'Quarterly Realization' },
@@ -84,6 +86,10 @@ export default function InitiativeModal({ initiativeId, onClose, onSaved, onClon
         pepm: draft.pepm,
         progress_metric: draft.progress_metric,
         notes: draft.notes,
+        corporate_blue_chip: draft.corporate_blue_chip,
+        product_initiative: draft.product_initiative,
+        commercialization_owner: draft.commercialization_owner,
+        product_ops_owner: draft.product_ops_owner,
       });
 
       await api.updatePipeline(initiativeId, {
@@ -205,6 +211,7 @@ export default function InitiativeModal({ initiativeId, onClose, onSaved, onClon
 
             <div className="flex-1 overflow-y-auto px-5 py-4">
               {activeTab === 'details' && <DetailsTab draft={draft} onChange={updateDraft} />}
+              {activeTab === 'alignment' && <AlignmentTab draft={draft} onChange={updateDraft} />}
               {activeTab === 'progress' && <ProgressTab draft={draft} onChange={updateDraft} />}
               {activeTab === 'revenue' && <RevenueTab draft={draft} onChange={updateDraft} />}
               {activeTab === 'quarterly' && <QuarterlyTab actuals={actualsDraft} onChange={updateActual} />}
