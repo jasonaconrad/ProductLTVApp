@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api.js';
-import { FISCAL_YEARS } from '../constants.js';
+import { FISCAL_YEARS, MARKET_TEAMS } from '../constants.js';
 
 const EMPTY = {
   name: '',
@@ -16,6 +16,9 @@ const EMPTY = {
   pepm: 0,
   progress_metric: 'enablement',
   notes: '',
+  market_team: MARKET_TEAMS[0],
+  related_links: '',
+  expected_launch_quarter: '',
 };
 
 export default function AddInitiativeModal({ onClose, onCreated }) {
@@ -123,6 +126,30 @@ export default function AddInitiativeModal({ onClose, onCreated }) {
             </label>
 
             <label className="flex flex-col gap-1">
+              <span className="text-label12 font-medium text-gray-500">Market Team</span>
+              <select
+                value={form.market_team}
+                onChange={(e) => update({ market_team: e.target.value })}
+                className="rounded border border-gray-300 px-2 py-1.5 text-base13 focus:border-navy focus:outline-none"
+              >
+                {MARKET_TEAMS.map((team) => (
+                  <option key={team} value={team}>{team}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-label12 font-medium text-gray-500">Expected Launch Quarter</span>
+              <input
+                type="text"
+                placeholder="e.g. FY27-Q2"
+                value={form.expected_launch_quarter}
+                onChange={(e) => update({ expected_launch_quarter: e.target.value })}
+                className="rounded border border-gray-300 px-2 py-1.5 text-base13 focus:border-navy focus:outline-none"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
               <span className="text-label12 font-medium text-gray-500">FY26 target ($)</span>
               <input
                 type="number"
@@ -163,6 +190,17 @@ export default function AddInitiativeModal({ onClose, onCreated }) {
               <option value="enablement">% of client base enabled</option>
               <option value="attach">Attach rate</option>
             </select>
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-label12 font-medium text-gray-500">Related Links</span>
+            <textarea
+              rows={2}
+              placeholder="Links to related Confluence boards"
+              value={form.related_links}
+              onChange={(e) => update({ related_links: e.target.value })}
+              className="rounded border border-gray-300 px-2 py-1.5 text-base13 focus:border-navy focus:outline-none"
+            />
           </label>
 
           <label className="flex flex-col gap-1">

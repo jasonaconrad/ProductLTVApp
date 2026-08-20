@@ -8,6 +8,7 @@ const DIFF_FIELDS = [
   'status', 'fy26_target', 'fy27_target', 'fy28_target', 'progress_metric', 'target_launch',
   'forecast_launch', 'target_progress', 'actual_progress', 'ramp_pct', 'confidence_score', 'owner',
   'corporate_blue_chip', 'product_initiative', 'commercialization_owner', 'product_ops_owner',
+  'market_team', 'related_links', 'expected_launch_quarter',
 ];
 
 function revenueTotal(row) {
@@ -34,6 +35,7 @@ router.post('/', (req, res) => {
     SELECT i.id AS initiative_id, i.name AS initiative_name, i.platform, i.segment, i.status, i.fy,
            i.rev_type, i.owner, i.fy26_target, i.fy27_target, i.fy28_target, i.pepm, i.progress_metric, i.notes,
            i.corporate_blue_chip, i.product_initiative, i.commercialization_owner, i.product_ops_owner,
+           i.market_team, i.related_links, i.expected_launch_quarter,
            p.target_launch, p.forecast_launch, p.target_progress, p.actual_progress, p.ramp_pct, p.confidence_score
     FROM initiatives i
     LEFT JOIN pipeline_fields p ON p.initiative_id = i.id
@@ -45,12 +47,14 @@ router.post('/', (req, res) => {
       initiative_id, initiative_name, platform, segment, status, fy, rev_type, owner,
       fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes,
       corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner,
+      market_team, related_links, expected_launch_quarter,
       target_launch, forecast_launch, target_progress, actual_progress, ramp_pct, confidence_score
     ) VALUES (
       @snapshot_id, @snapshot_label, datetime('now'), @created_by,
       @initiative_id, @initiative_name, @platform, @segment, @status, @fy, @rev_type, @owner,
       @fy26_target, @fy27_target, @fy28_target, @pepm, @progress_metric, @notes,
       @corporate_blue_chip, @product_initiative, @commercialization_owner, @product_ops_owner,
+      @market_team, @related_links, @expected_launch_quarter,
       @target_launch, @forecast_launch, @target_progress, @actual_progress, @ramp_pct, @confidence_score
     )
   `);

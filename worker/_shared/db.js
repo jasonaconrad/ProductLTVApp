@@ -1,6 +1,6 @@
 import { computeConfidence } from './confidence.js';
 
-const INITIATIVE_FIELDS = ['name', 'platform', 'segment', 'status', 'fy', 'rev_type', 'owner', 'fy26_target', 'fy27_target', 'fy28_target', 'pepm', 'progress_metric', 'notes', 'corporate_blue_chip', 'product_initiative', 'commercialization_owner', 'product_ops_owner'];
+const INITIATIVE_FIELDS = ['name', 'platform', 'segment', 'status', 'fy', 'rev_type', 'owner', 'fy26_target', 'fy27_target', 'fy28_target', 'pepm', 'progress_metric', 'notes', 'corporate_blue_chip', 'product_initiative', 'commercialization_owner', 'product_ops_owner', 'market_team', 'related_links', 'expected_launch_quarter'];
 const PIPELINE_FIELDS = ['target_launch', 'forecast_launch', 'target_progress', 'actual_progress', 'ramp_pct'];
 
 const JOINED_SELECT = `
@@ -43,15 +43,19 @@ export async function createInitiative(env, body) {
     product_initiative: body.product_initiative || null,
     commercialization_owner: body.commercialization_owner || null,
     product_ops_owner: body.product_ops_owner || null,
+    market_team: body.market_team || null,
+    related_links: body.related_links || null,
+    expected_launch_quarter: body.expected_launch_quarter || null,
   };
 
   const insert = await env.DB.prepare(`
-    INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes, corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes, corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner, market_team, related_links, expected_launch_quarter)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     values.name, values.platform, values.segment, values.status, values.fy, values.rev_type, values.owner,
     values.fy26_target, values.fy27_target, values.fy28_target, values.pepm, values.progress_metric, values.notes,
-    values.corporate_blue_chip, values.product_initiative, values.commercialization_owner, values.product_ops_owner
+    values.corporate_blue_chip, values.product_initiative, values.commercialization_owner, values.product_ops_owner,
+    values.market_team, values.related_links, values.expected_launch_quarter
   ).run();
 
   const id = insert.meta.last_row_id;
@@ -76,12 +80,13 @@ export async function cloneInitiative(env, id) {
   if (!source) return null;
 
   const insert = await env.DB.prepare(`
-    INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes, corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner)
-    VALUES (?, ?, ?, 'Consideration', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes, corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner, market_team, related_links, expected_launch_quarter)
+    VALUES (?, ?, ?, 'Consideration', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     `${source.name} (Copy)`, source.platform, source.segment, source.fy, source.rev_type, source.owner,
     source.fy26_target, source.fy27_target, source.fy28_target, source.pepm, source.progress_metric, source.notes,
-    source.corporate_blue_chip, source.product_initiative, source.commercialization_owner, source.product_ops_owner
+    source.corporate_blue_chip, source.product_initiative, source.commercialization_owner, source.product_ops_owner,
+    source.market_team, source.related_links, source.expected_launch_quarter
   ).run();
 
   const newId = insert.meta.last_row_id;
@@ -126,13 +131,15 @@ export async function updateInitiative(env, id, body) {
       rev_type = ?, owner = ?, fy26_target = ?, fy27_target = ?,
       fy28_target = ?, pepm = ?, progress_metric = ?, notes = ?,
       corporate_blue_chip = ?, product_initiative = ?, commercialization_owner = ?, product_ops_owner = ?,
+      market_team = ?, related_links = ?, expected_launch_quarter = ?,
       updated_at = datetime('now')
     WHERE id = ?
   `).bind(
     merged.name, merged.platform, merged.segment, merged.status, merged.fy,
     merged.rev_type, merged.owner, merged.fy26_target, merged.fy27_target,
     merged.fy28_target, merged.pepm, merged.progress_metric, merged.notes,
-    merged.corporate_blue_chip, merged.product_initiative, merged.commercialization_owner, merged.product_ops_owner, id
+    merged.corporate_blue_chip, merged.product_initiative, merged.commercialization_owner, merged.product_ops_owner,
+    merged.market_team, merged.related_links, merged.expected_launch_quarter, id
   ).run();
 
   return getJoined(env, id);
@@ -214,6 +221,7 @@ export async function takeSnapshot(env, snapshotId, label, createdBy) {
     SELECT i.id AS initiative_id, i.name AS initiative_name, i.platform, i.segment, i.status, i.fy,
            i.rev_type, i.owner, i.fy26_target, i.fy27_target, i.fy28_target, i.pepm, i.progress_metric, i.notes,
            i.corporate_blue_chip, i.product_initiative, i.commercialization_owner, i.product_ops_owner,
+           i.market_team, i.related_links, i.expected_launch_quarter,
            p.target_launch, p.forecast_launch, p.target_progress, p.actual_progress, p.ramp_pct, p.confidence_score
     FROM initiatives i
     LEFT JOIN pipeline_fields p ON p.initiative_id = i.id
@@ -225,12 +233,14 @@ export async function takeSnapshot(env, snapshotId, label, createdBy) {
       initiative_id, initiative_name, platform, segment, status, fy, rev_type, owner,
       fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes,
       corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner,
+      market_team, related_links, expected_launch_quarter,
       target_launch, forecast_launch, target_progress, actual_progress, ramp_pct, confidence_score
     ) VALUES (
       ?, ?, datetime('now'), ?,
       ?, ?, ?, ?, ?, ?, ?, ?,
       ?, ?, ?, ?, ?, ?,
       ?, ?, ?, ?,
+      ?, ?, ?,
       ?, ?, ?, ?, ?, ?
     )
   `);
@@ -240,6 +250,7 @@ export async function takeSnapshot(env, snapshotId, label, createdBy) {
     row.initiative_id, row.initiative_name, row.platform, row.segment, row.status, row.fy, row.rev_type, row.owner,
     row.fy26_target, row.fy27_target, row.fy28_target, row.pepm, row.progress_metric, row.notes,
     row.corporate_blue_chip, row.product_initiative, row.commercialization_owner, row.product_ops_owner,
+    row.market_team, row.related_links, row.expected_launch_quarter,
     row.target_launch, row.forecast_launch, row.target_progress, row.actual_progress, row.ramp_pct, row.confidence_score
   ));
 
@@ -307,6 +318,7 @@ export const DIFF_FIELDS = [
   'status', 'fy26_target', 'fy27_target', 'fy28_target', 'progress_metric', 'target_launch',
   'forecast_launch', 'target_progress', 'actual_progress', 'ramp_pct', 'confidence_score', 'owner',
   'corporate_blue_chip', 'product_initiative', 'commercialization_owner', 'product_ops_owner',
+  'market_team', 'related_links', 'expected_launch_quarter',
 ];
 
 function revenueTotal(row) {

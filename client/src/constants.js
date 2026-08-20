@@ -2,6 +2,8 @@ export const STATUSES = ['Consideration', 'In Progress', 'Launched', 'At Scale',
 
 export const FISCAL_YEARS = ['FY26', 'FY27', 'FY28'];
 
+export const MARKET_TEAMS = ['ASO', 'PEO', 'Retirement', 'PIA', 'HCM'];
+
 export const QUARTERS = [
   'FY26-Q1', 'FY26-Q2', 'FY26-Q3', 'FY26-Q4',
   'FY27-Q1', 'FY27-Q2', 'FY27-Q3', 'FY27-Q4',

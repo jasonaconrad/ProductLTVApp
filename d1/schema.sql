@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS initiatives (
   product_initiative TEXT,
   commercialization_owner TEXT,
   product_ops_owner TEXT,
+  market_team TEXT,
+  related_links TEXT,
+  expected_launch_quarter TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -72,6 +75,9 @@ CREATE TABLE IF NOT EXISTS snapshots (
   product_initiative TEXT,
   commercialization_owner TEXT,
   product_ops_owner TEXT,
+  market_team TEXT,
+  related_links TEXT,
+  expected_launch_quarter TEXT,
 
   target_launch TEXT,
   forecast_launch TEXT,
