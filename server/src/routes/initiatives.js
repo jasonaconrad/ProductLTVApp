@@ -4,7 +4,7 @@ import { computeConfidence } from '../confidence.js';
 
 const router = Router();
 
-const INITIATIVE_FIELDS = ['name', 'platform', 'segment', 'status', 'fy', 'rev_type', 'owner', 'fy26_target', 'fy27_target', 'fy28_target', 'pepm', 'progress_metric', 'notes', 'corporate_blue_chip', 'product_initiative', 'commercialization_owner', 'product_ops_owner'];
+const INITIATIVE_FIELDS = ['name', 'platform', 'segment', 'status', 'fy', 'rev_type', 'owner', 'fy26_target', 'fy27_target', 'fy28_target', 'pepm', 'progress_metric', 'notes', 'corporate_blue_chip', 'product_initiative', 'commercialization_owner', 'product_ops_owner', 'market_team', 'related_links', 'expected_launch_quarter'];
 const PIPELINE_FIELDS = ['target_launch', 'forecast_launch', 'target_progress', 'actual_progress', 'ramp_pct'];
 
 function getJoined(id) {
@@ -43,8 +43,8 @@ router.post('/', (req, res) => {
 
   const insertTxn = db.transaction(() => {
     const result = db.prepare(`
-      INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes, corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner)
-      VALUES (@name, @platform, @segment, @status, @fy, @rev_type, @owner, @fy26_target, @fy27_target, @fy28_target, @pepm, @progress_metric, @notes, @corporate_blue_chip, @product_initiative, @commercialization_owner, @product_ops_owner)
+      INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes, corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner, market_team, related_links, expected_launch_quarter)
+      VALUES (@name, @platform, @segment, @status, @fy, @rev_type, @owner, @fy26_target, @fy27_target, @fy28_target, @pepm, @progress_metric, @notes, @corporate_blue_chip, @product_initiative, @commercialization_owner, @product_ops_owner, @market_team, @related_links, @expected_launch_quarter)
     `).run({
       name: body.name,
       platform: body.platform,
@@ -63,6 +63,9 @@ router.post('/', (req, res) => {
       product_initiative: body.product_initiative || null,
       commercialization_owner: body.commercialization_owner || null,
       product_ops_owner: body.product_ops_owner || null,
+      market_team: body.market_team || null,
+      related_links: body.related_links || null,
+      expected_launch_quarter: body.expected_launch_quarter || null,
     });
 
     const id = result.lastInsertRowid;
@@ -93,8 +96,8 @@ router.post('/:id/clone', (req, res) => {
 
   const cloneTxn = db.transaction(() => {
     const result = db.prepare(`
-      INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes, corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner)
-      VALUES (@name, @platform, @segment, 'Consideration', @fy, @rev_type, @owner, @fy26_target, @fy27_target, @fy28_target, @pepm, @progress_metric, @notes, @corporate_blue_chip, @product_initiative, @commercialization_owner, @product_ops_owner)
+      INSERT INTO initiatives (name, platform, segment, status, fy, rev_type, owner, fy26_target, fy27_target, fy28_target, pepm, progress_metric, notes, corporate_blue_chip, product_initiative, commercialization_owner, product_ops_owner, market_team, related_links, expected_launch_quarter)
+      VALUES (@name, @platform, @segment, 'Consideration', @fy, @rev_type, @owner, @fy26_target, @fy27_target, @fy28_target, @pepm, @progress_metric, @notes, @corporate_blue_chip, @product_initiative, @commercialization_owner, @product_ops_owner, @market_team, @related_links, @expected_launch_quarter)
     `).run({
       name: `${source.name} (Copy)`,
       platform: source.platform,
@@ -112,6 +115,9 @@ router.post('/:id/clone', (req, res) => {
       product_initiative: source.product_initiative,
       commercialization_owner: source.commercialization_owner,
       product_ops_owner: source.product_ops_owner,
+      market_team: source.market_team,
+      related_links: source.related_links,
+      expected_launch_quarter: source.expected_launch_quarter,
     });
 
     const id = result.lastInsertRowid;
@@ -164,6 +170,7 @@ router.put('/:id', (req, res) => {
       fy28_target = @fy28_target, pepm = @pepm, progress_metric = @progress_metric, notes = @notes,
       corporate_blue_chip = @corporate_blue_chip, product_initiative = @product_initiative,
       commercialization_owner = @commercialization_owner, product_ops_owner = @product_ops_owner,
+      market_team = @market_team, related_links = @related_links, expected_launch_quarter = @expected_launch_quarter,
       updated_at = datetime('now')
     WHERE id = @id
   `).run({ ...merged, id: req.params.id });

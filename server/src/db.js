@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS initiatives (
   product_initiative TEXT,
   commercialization_owner TEXT,
   product_ops_owner TEXT,
+  market_team TEXT,
+  related_links TEXT,
+  expected_launch_quarter TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -86,6 +89,9 @@ CREATE TABLE IF NOT EXISTS snapshots (
   product_initiative TEXT,
   commercialization_owner TEXT,
   product_ops_owner TEXT,
+  market_team TEXT,
+  related_links TEXT,
+  expected_launch_quarter TEXT,
 
   target_launch TEXT,
   forecast_launch TEXT,
@@ -145,7 +151,10 @@ function migrateSchema() {
     console.log('Migrated snapshots table: added fy28_target.');
   }
 
-  const alignmentColumns = ['corporate_blue_chip', 'product_initiative', 'commercialization_owner', 'product_ops_owner'];
+  const alignmentColumns = [
+    'corporate_blue_chip', 'product_initiative', 'commercialization_owner', 'product_ops_owner',
+    'market_team', 'related_links', 'expected_launch_quarter',
+  ];
 
   const currentInitiativeColumns = db.prepare("PRAGMA table_info(initiatives)").all().map((c) => c.name);
   for (const col of alignmentColumns) {
